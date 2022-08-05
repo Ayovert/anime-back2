@@ -1,0 +1,55 @@
+services:
+
+  AnimeBack:
+    image: animeback:latest
+    depends_on:
+      - "postgres_image"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+      - "8081:443"
+
+    environment:
+      ASPNETCORE_URLS: "https://+;http://+"
+      ASPNETCORE_HTTPS_PORT: "8081"
+      ASPNETCORE_ENVIRONMENT: Development
+      DB_CONNECTION_STRING: "host=postgres_image;port=5432;database=AnimeClanTest;username=ayovert;password=secret"
+    volumes:
+      - ${APPDATA}\microsoft\UserSecrets\:/root/.microsoft/usersecrets
+      - ${USERPROFILE}\.aspnet\https:/root/.aspnet/https/
+    networks:
+      - animeback-dev
+
+  postgres_image:
+    image: postgres:latest
+    ports:
+      - "5432"
+    restart: always
+    volumes:
+      - db_volume:/var/lib/postgresql/data
+      #- ./dbscripts/seed:sql :/docker-entrypoint-initdb.d/seed.sql'
+    environment:
+      POSTGRES_USER: "ayovert"
+      POSTGRES_PASSWORD: "secret"
+      POSTGRES_DB : "AnimeClanTest"
+    networks:
+      - animeback-dev
+
+
+configs:
+  httpd-config:
+    external: true
+
+secrets:
+  server-certificate:
+    external: true
+
+networks:
+  # The presence of these objects is sufficient to define them
+  AnimeBack-dev:
+    driver: bridge
+
+volumes:
+  db_volume:
